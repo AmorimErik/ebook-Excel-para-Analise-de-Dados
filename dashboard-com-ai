@@ -1,1 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Porsche Executive Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0b0b0b;
+      color: #f5f5f5;
+      overflow-x: hidden;
+    }
+
+    .glass {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+    }
+
+    .gold-gradient {
+      background: linear-gradient(135deg, #9d7c47 0%, #f2d8a7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-bg {
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,0.06), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(180,140,90,0.14), transparent 25%),
+        #0b0b0b;
+    }
+
+    select {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    canvas {
+      max-height: 340px;
+    }
+  </style>
+</head>
+<body class="hero-bg min-h-screen px-6 py-8">
+
+  <div class="max-w-7xl mx-auto space-y-8">
+
+    <header class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+      <div>
+        <p class="uppercase tracking-[0.35rem] text-sm text-zinc-400 mb-3">Porsche Brasil · Executive Analytics</p>
+        <h1 class="text-5xl font-semibold leading-tight">
+          Dashboard de
+          <span class="gold-gradient">Performance Comercial</span>
+        </h1>
+        <p class="text-zinc-400 mt-4 max-w-2xl text-lg">
+          Visão analítica refinada sobre vendas, comportamento regional e tendências dos modelos Porsche.
+        </p>
+      </div>
+
+      <div class="glass rounded-3xl px-6 py-5 min-w-[280px]">
+        <p class="text-zinc-400 text-sm uppercase tracking-widest">Receita Total</p>
+        <h2 id="totalRevenue" class="text-4xl font-bold mt-2">US$ 0</h2>
+        <p class="text-zinc-500 mt-2 text-sm">Base consolidada de vendas Porsche</p>
+      </div>
+    </header>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div class="glass rounded-3xl p-5">
+        <label class="text-zinc-400 text-sm block mb-2">Modelo Porsche</label>
+        <select id="modelFilter" class="w-full rounded-2xl px-4 py-3 outline-none text-white">
+          <option value="all">Todos</option>
+        </select>
+      </div>
+
+      <div class="glass rounded-3xl p-5">
+        <label class="text-zinc-400 text-sm block mb-2">Model Year</label>
+        <select id="yearFilter" class="w-full rounded-2xl px-4 py-3 outline-none text-white">
+          <option value="all">Todos</option>
+        </select>
+      </div>
+
+      <div class="glass rounded-3xl p-5">
+        <label class="text-zinc-400 text-sm block mb-2">Cidade</label>
+        <select id="cityFilter" class="w-full rounded-2xl px-4 py-3 outline-none text-white">
+          <option value="all">Todas</option>
+        </select>
+      </div>
+
+      <div class="glass rounded-3xl p-5">
+        <label class="text-zinc-400 text-sm block mb-2">Método de Pagamento</label>
+        <select id="payFilter" class="w-full rounded-2xl px-4 py-3 outline-none text-white">
+          <option value="all">Todos</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <div class="glass rounded-3xl p-6">
+        <p class="text-zinc-400 text-sm uppercase tracking-wider">Total de Vendas</p>
+        <h3 id="totalSales" class="text-4xl font-bold mt-3">0</h3>
+      </div>
+
+      <div class="glass rounded-3xl p-6">
+        <p class="text-zinc-400 text-sm uppercase tracking-wider">Modelo Mais Vendido</p>
+        <h3 id="bestModel" class="text-3xl font-semibold mt-3">-</h3>
+      </div>
+
+      <div class="glass rounded-3xl p-6">
+        <p class="text-zinc-400 text-sm uppercase tracking-wider">Cidade Destaque</p>
+        <h3 id="topCity" class="text-3xl font-semibold mt-3">-</h3>
+      </div>
+
+      <div class="glass rounded-3xl p-6">
+        <p class="text-zinc-400 text-sm uppercase tracking-wider">Ano Mais Vendido</p>
+        <h3 id="bestYear" class="text-3xl font-semibold mt-3">-</h3>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+      <div class="glass rounded-[2rem] p-6">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-2xl font-semibold">Principais modelos por cidade</h3>
+            <p class="text-zinc-400 mt-1">Distribuição regional dos modelos Porsche</p>
+          </div>
+        </div>
+        <canvas id="cityChart"></canvas>
+      </div>
+
+      <div class="glass rounded-[2rem] p-6">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-2xl font-semibold">Ano de modelo mais vendido</h3>
+            <p class="text-zinc-400 mt-1">Comparativo por período analisado</p>
+          </div>
+        </div>
+        <canvas id="yearChart"></canvas>
+      </div>
+
+    </section>
+
+    <section class="glass rounded-[2rem] p-7">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="text-3xl font-semibold">Insights Estratégicos</h3>
+          <p class="text-zinc-400 mt-1">Leituras automáticas da base de vendas</p>
+        </div>
+      </div>
+
+      <div id="insights" class="grid grid-cols-1 lg:grid-cols-3 gap-5"></div>
+    </section>
+
+  </div>
+
+  <script>
+    const salesData = [
+      { model: '911 Turbo S', year: 2024, city: 'Seattle', pay: 'Wire Transfer', price: 235000 },
+      { model: 'Cayenne Coupe', year: 2023, city: 'Austin', pay: 'Financing', price: 112750 },
+      { model: 'Macan S', year: 2021, city: 'Denver', pay: 'Cash', price: 68900 },
+      { model: 'Taycan 4S', year: 2024, city: 'Los Angeles', pay: 'Bank Transfer', price: 121000 },
+      { model: '718 Cayman', year: 2022, city: 'Boston', pay: 'Credit Card', price: 79500 },
+      { model: '911 Carrera', year: 2024, city: 'Miami', pay: 'Financing', price: 149000 },
+      { model: 'Panamera', year: 2023, city: 'Chicago', pay: 'Wire Transfer', price: 132000 },
+      { model: 'Macan GTS', year: 2024, city: 'New York', pay: 'Cash', price: 98000 },
+      { model: 'Cayenne', year: 2022, city: 'Houston', pay: 'Financing', price: 107000 },
+      { model: 'Taycan Turbo', year: 2024, city: 'Los Angeles', pay: 'Bank Transfer', price: 180000 },
+      { model: '911 GT3', year: 2023, city: 'Miami', pay: 'Wire Transfer', price: 220000 },
+      { model: 'Macan S', year: 2024, city: 'Seattle', pay: 'Financing', price: 85000 },
+      { model: '911 Turbo S', year: 2024, city: 'Los Angeles', pay: 'Wire Transfer', price: 245000 },
+      { model: 'Cayenne Coupe', year: 2023, city: 'Miami', pay: 'Cash', price: 114000 },
+      { model: 'Taycan 4S', year: 2024, city: 'New York', pay: 'Financing', price: 125000 },
+      { model: 'Macan GTS', year: 2024, city: 'Chicago', pay: 'Credit Card', price: 102000 }
+    ];
+
+    const modelFilter = document.getElementById('modelFilter');
+    const yearFilter = document.getElementById('yearFilter');
+    const cityFilter = document.getElementById('cityFilter');
+    const payFilter = document.getElementById('payFilter');
+
+    function populateFilters() {
+      const models = [...new Set(salesData.map(i => i.model))];
+      const years = [...new Set(salesData.map(i => i.year))];
+      const cities = [...new Set(salesData.map(i => i.city))];
+      const pays = [...new Set(salesData.map(i => i.pay))];
+
+      models.forEach(v => modelFilter.innerHTML += `<option value="${v}">${v}</option>`);
+      years.forEach(v => yearFilter.innerHTML += `<option value="${v}">${v}</option>`);
+      cities.forEach(v => cityFilter.innerHTML += `<option value="${v}">${v}</option>`);
+      pays.forEach(v => payFilter.innerHTML += `<option value="${v}">${v}</option>`);
+    }
+
+    function getFilteredData() {
+      return salesData.filter(item => {
+        return (
+          (modelFilter.value === 'all' || item.model === modelFilter.value) &&
+          (yearFilter.value === 'all' || item.year == yearFilter.value) &&
+          (cityFilter.value === 'all' || item.city === cityFilter.value) &&
+          (payFilter.value === 'all' || item.pay === payFilter.value)
+        );
+      });
+    }
+
+    const cityCtx = document.getElementById('cityChart');
+    const yearCtx = document.getElementById('yearChart');
+
+    let cityChart;
+    let yearChart;
+
+    function renderCharts(data) {
+      const cityMap = {};
+      data.forEach(item => {
+        cityMap[item.city] = (cityMap[item.city] || 0) + 1;
+      });
+
+      const yearMap = {};
+      data.forEach(item => {
+        yearMap[item.year] = (yearMap[item.year] || 0) + 1;
+      });
+
+      if(cityChart) cityChart.destroy();
+      if(yearChart) yearChart.destroy();
+
+      cityChart = new Chart(cityCtx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(cityMap),
+          datasets: [{
+            label: 'Vendas',
+            data: Object.values(cityMap),
+            backgroundColor: 'rgba(212, 175, 55, 0.7)',
+            borderRadius: 12
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { ticks: { color: '#cfcfcf' } },
+            y: { ticks: { color: '#cfcfcf' } }
+          }
+        }
+      });
+
+      yearChart = new Chart(yearCtx, {
+        type: 'line',
+        data: {
+          labels: Object.keys(yearMap),
+          datasets: [{
+            label: 'Modelos vendidos',
+            data: Object.values(yearMap),
+            borderColor: '#d4af37',
+            backgroundColor: 'rgba(212,175,55,0.15)',
+            tension: 0.35,
+            fill: true
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { ticks: { color: '#cfcfcf' } },
+            y: { ticks: { color: '#cfcfcf' } }
+          }
+        }
+      });
+    }
+
+    function renderKPIs(data) {
+      const totalRevenue = data.reduce((sum, item) => sum + item.price, 0);
+
+      document.getElementById('totalRevenue').innerText =
+        totalRevenue.toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          maximumFractionDigits: 0
+        });
+
+      document.getElementById('totalSales').innerText = data.length;
+
+      const modelCount = {};
+      const cityCount = {};
+      const yearCount = {};
+
+      data.forEach(item => {
+        modelCount[item.model] = (modelCount[item.model] || 0) + 1;
+        cityCount[item.city] = (cityCount[item.city] || 0) + 1;
+        yearCount[item.year] = (yearCount[item.year] || 0) + 1;
+      });
+
+      const topModel = Object.entries(modelCount).sort((a,b) => b[1]-a[1])[0];
+      const topCity = Object.entries(cityCount).sort((a,b) => b[1]-a[1])[0];
+      const topYear = Object.entries(yearCount).sort((a,b) => b[1]-a[1])[0];
+
+      document.getElementById('bestModel').innerText = topModel ? topModel[0] : '-';
+      document.getElementById('topCity').innerText = topCity ? topCity[0] : '-';
+      document.getElementById('bestYear').innerText = topYear ? topYear[0] : '-';
+    }
+
+    function renderInsights(data) {
+      const insights = document.getElementById('insights');
+
+      const cityStats = {};
+      data.forEach(item => {
+        if(!cityStats[item.city]) cityStats[item.city] = [];
+        cityStats[item.city].push(item.model);
+      });
+
+      insights.innerHTML = Object.entries(cityStats).slice(0,3).map(([city, models]) => {
+        const frequency = {};
+
+        models.forEach(m => frequency[m] = (frequency[m] || 0) + 1);
+
+        const popular = Object.entries(frequency).sort((a,b) => b[1]-a[1])[0];
+
+        return `
+          <div class="rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+            <p class="text-zinc-500 uppercase tracking-[0.25rem] text-xs mb-3">Insight Regional</p>
+            <h4 class="text-2xl font-semibold mb-4">${city}</h4>
+            <p class="text-zinc-300 leading-relaxed">
+              O modelo <span class="text-[#d4af37] font-semibold">${popular ? popular[0] : '-'}</span>
+              apresentou maior relevância comercial nesta região, indicando forte aderência ao perfil de consumo local.
+            </p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateDashboard() {
+      const filtered = getFilteredData();
+      renderCharts(filtered);
+      renderKPIs(filtered);
+      renderInsights(filtered);
+    }
+
+    [modelFilter, yearFilter, cityFilter, payFilter].forEach(filter => {
+      filter.addEventListener('change', updateDashboard);
+    });
+
+    populateFilters();
+    updateDashboard();
+  </script>
+
+</body>
+</html>
 
